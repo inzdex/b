@@ -4,18 +4,25 @@ const ctx = canvas.getContext('2d');
 const flipButton = document.getElementById('flipButton');
 const resultText = document.getElementById('result');
 
-let bottlePositionY = 500;
-let bottleAngle = 0;
-let isFlipping = false;
+const platformHeight = 20; // Height of the platform
+let bottlePositionY = 500; // Starting position
+let bottleAngle = 0; // Initial angle
+let isFlipping = false; // Is the bottle currently flipping?
+const gravity = 0.5; // Force of gravity
+let bottleVelocity = 0; // Initial velocity of the bottle
 
 function drawBottle() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.save();
     ctx.translate(canvas.width / 2, bottlePositionY);
     ctx.rotate(bottleAngle);
     ctx.fillStyle = 'orange';
-    ctx.fillRect(-10, -30, 20, 30); // Bottle shape
+    ctx.fillRect(-10, -30, 20, 30); // Draw the bottle shape
     ctx.restore();
+}
+
+function drawPlatform() {
+    ctx.fillStyle = '#8B4513'; // Brown color for the platform
+    ctx.fillRect(0, canvas.height - platformHeight, canvas.width, platformHeight); // Draw the platform
 }
 
 function flipBottle() {
@@ -23,30 +30,28 @@ function flipBottle() {
 
     isFlipping = true;
     bottleAngle = Math.random() * (Math.PI * 2) - Math.PI; // Random angle
-    const flipSpeed = 5; // Speed of the flip up or down
-    const gravity = 0.2; // Gravity effect
-    let flipHeight = 0;
+    bottleVelocity = -10; // Initial upward velocity
 
     function animateFlip() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        bottlePositionY -= flipSpeed; // Move bottle upward
-        flipHeight += flipSpeed; 
-        if (flipHeight > 200 || bottlePositionY <= 0) {
-            flipSpeed = -flipSpeed; // Start coming back down
-        }
-        bottlePositionY += flipSpeed;
+        drawPlatform(); // Draw the platform
+        bottlePositionY += bottleVelocity; // Move bottle by velocity
+        bottleVelocity += gravity; // Apply gravity to the velocity
 
-        bottleAngle += 0.1; // Simulate spin
-
-        drawBottle();
-
-        if (bottlePositionY >= 500) {
+        // Check if it hits the platform
+        if (bottlePositionY >= canvas.height - platformHeight - 30) {
+            bottlePositionY = canvas.height - platformHeight - 30; // Fix position to on top of platform
             checkLand();
             return; // Stop if it's landed
         }
 
+        // Draw the bottle
+        bottleAngle += 0.1; // Spin the bottle
+        drawBottle(); // Draw the bottle
+
         requestAnimationFrame(animateFlip);
     }
+    
     animateFlip();
 }
 
@@ -57,10 +62,15 @@ function checkLand() {
     } else {
         resultText.innerText = "Try again! The bottle flipped over.";
     }
-    bottlePositionY = 500; // Reset to original position
-    bottleAngle = 0; // Reset angle
+    
+    // Reset to initial position
+    bottlePositionY = 500;
+    bottleAngle = 0;
+    bottleVelocity = 0; // Reset velocity
 }
 
 flipButton.addEventListener('click', flipBottle);
 
+// Initial drawing
+drawPlatform();
 drawBottle();
